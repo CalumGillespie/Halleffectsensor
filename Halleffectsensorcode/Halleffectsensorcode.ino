@@ -13,7 +13,7 @@ void setup() {
 void loop() {
   // read the input pin:
   int sensorState = digitalRead(hallEffect);
-  // print out the state of the button:
+  // print out the state of the sensor:
   Serial.println(sensorState);
   delay(1);  // delay in between reads for stability
 
