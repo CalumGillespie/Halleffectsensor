@@ -36,7 +36,7 @@ void setup() {
 
 }
 
-
+void loop() {
 
   // make the sensors's pin an input:
   pinMode(hallEffect, INPUT);
