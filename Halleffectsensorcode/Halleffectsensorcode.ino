@@ -9,6 +9,23 @@ RTC_DS3231 rtc;
 
 File myFile; 
 
+// set up variables using the SD utility library functions:
+Sd2Card card;
+SdVolume volume;
+SdFile root;
+
+const int chipSelect = 4;          // change this to match your SD shield or module; Uno=4, Mega=53
+
+int hallEffect = 2;                // hall effect senser pin
+char inputCommand ;                // a string to hold incoming data
+boolean inputComplete = false;
+const int button = 9;              // data record button
+
+bool button_status = LOW;          // default data record button position
+bool SD_present = HIGH;            // default SD card status
+
+String filename = "file_0.txt";
+
 void setup() {
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
@@ -19,21 +36,11 @@ void setup() {
 
 }
 
-// the loop routine runs over and over again forever:
-void loop() {
 
-  // digital pin 2 has a hall effect sensor attached to it. Give it a name:
-int hallEffect = 2;
 
   // make the sensors's pin an input:
   pinMode(hallEffect, INPUT);
-  // read the input pin:
-  int sensorState = digitalRead(hallEffect);
-  // print out the state of the button:
-  Serial.println(sensorState);
-  delay(1);  // delay in between reads for stability
-
-
+  int sensorState = analogRead(hallEffect);
 
 
   // SETUP RTC MODULE
@@ -47,20 +54,60 @@ int hallEffect = 2;
   // Set the RTC to the date & time this sketch was compiled
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   
-
+  // SETUP SD CARD
   Serial.print("Initializing SD card...");
+  if (!SD.begin(chipSelect) or !card.init(SPI_HALF_SPEED, chipSelect) or !volume.init(card)) {
+    
+    // Identify problem
+    if (!card.init(SPI_HALF_SPEED, chipSelect)) {
+      Serial.println("card not detected!");
+      delay(500);
+    }
 
-  if (!SD.begin(4)) {
-    Serial.println("initialization failed!");
-    while (1);
-  }
-  Serial.println("initialization done.");
+    if (!volume.init(card)) {
+      Serial.println("FAT 16/32 partition not detected!");
+      delay(500);
+    }
+  else{Serial.println("SD card initialization done.");}
 
-  // open the file. note that only one file can be open at a time,
-  // so you have to close this one before opening another.
-  myFile = SD.open("test.txt", FILE_WRITE);
-  
-  DateTime now = rtc.now();
+
+    // If record button is released 
+    if(digitalRead(button) == HIGH){   // button released (internal pullup)
+
+      Serial.println("stop");
+      if(button_status){               // if newly released
+        Serial.println("closing file");// stop recording 
+        myFile.close();
+        button_status = LOW;
+      }
+     }
+      
+  void loop () {
+    // If button is pressed 
+    else{                              
+      if(SD_present){digitalWrite(button_LED, HIGH);}   // turn the record button on 
+      Serial.println("record");
+      if(!button_status){                               // if newly pressed
+        button_status = HIGH;
+        for(int i=0; i<100; i++){                       // check for exting files of format "file_x.txt"
+          Serial.println("file_" + String(i) + ".txt");
+          if(SD.exists("file_" + String(i) + ".txt")){
+            Serial.println(" exists");
+          }
+          else{
+            filename = "file_" + String(i) + ".txt";   // when an unused file name is found
+            Serial.println("new_file_name"); 
+            myFile = SD.open(filename, FILE_WRITE);    // open the file
+            myFile.println();
+            // write column headings
+            myFile.println("Date, Time, ms_from_start, sensorState");
+            break;  
+          }
+          //delay(1000);
+        }
+       }
+      
+      DateTime now = rtc.now();
 
       myFile.print(now.year(), DEC);     // write date to SD card
       myFile.print("-");
@@ -81,32 +128,14 @@ int hallEffect = 2;
       unsigned long Time = millis();     // write ms since start of recording to SD card
       myFile.print(Time);                
       myFile.print(" , ");
-  // if the file opened okay, write to it:
-  if (myFile) {
-    Serial.print("Writing to test.txt...");
-    myFile.println(sensorState);
-    // close the file:
-    myFile.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
 
-  // re-open the file for reading:
-  myFile = SD.open("test.txt");
-  if (myFile) {
-    Serial.println("test.txt:");
+      
+      for(int i=0; i<n_sliders; i++){
+        myFile.print(slider_vals[i]);    // write slider vals to SD card
+        myFile.print(" , ");
+        myFile.print(servo_vals[i]);     // write servo vals to SD card
+        myFile.print(" , ");
+      }
+      myFile.println();
 
-    // read from the file until there's nothing else in it:
-    while (myFile.available()) {
-      Serial.write(myFile.read());
-    }
-    // close the file:
-    myFile.close();
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
-}
-
+ 
