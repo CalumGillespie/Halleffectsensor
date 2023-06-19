@@ -71,6 +71,11 @@ void loop() {
   else{Serial.println("SD card initialization done.");}
 
 
+  // creating a string of values for hall effect sensor readings
+   
+
+
+
     // If record button is released 
     if(digitalRead(button) == HIGH){   // button released (internal pullup)
 
@@ -85,8 +90,7 @@ void loop() {
   void loop () {
     // If button is pressed 
     else{                              
-      if(SD_present){digitalWrite(button_LED, HIGH);}   // turn the record button on 
-      Serial.println("record");
+  
       if(!button_status){                               // if newly pressed
         button_status = HIGH;
         for(int i=0; i<100; i++){                       // check for exting files of format "file_x.txt"
@@ -131,10 +135,9 @@ void loop() {
 
       
       for(int i=0; i<n_sliders; i++){
-        myFile.print(slider_vals[i]);    // write slider vals to SD card
-        myFile.print(" , ");
-        myFile.print(servo_vals[i]);     // write servo vals to SD card
-        myFile.print(" , ");
+        myFile.print(sensorState[i]);    // write sensor val to SD card
+
+    
       }
       myFile.println();
 
