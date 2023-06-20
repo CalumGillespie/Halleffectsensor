@@ -14,12 +14,12 @@ Sd2Card card;
 SdVolume volume;
 SdFile root;
 
-const int chipSelect = 4;          // change this to match your SD shield or module; Uno=4, Mega=53
+const int chipSelect = 10;          // change this to match your SD shield or module; Uno=4, Mega=53
 
-int hallEffect = 2;                // hall effect senser pin
+int hallEffect = A1;                // hall effect senser pin
 char inputCommand ;                // a string to hold incoming data
 boolean inputComplete = false;
-const int button = 9;              // data record button
+const int button = 4;              // data record button
 
 bool button_status = LOW;          // default data record button position
 bool SD_present = HIGH;            // default SD card status
