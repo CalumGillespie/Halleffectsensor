@@ -57,7 +57,7 @@ void loop() {
   }
 
   // Wait for a short duration
-  delay(1000);
+  delay(100);
 }
 
 void createFilename() {
